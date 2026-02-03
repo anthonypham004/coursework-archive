@@ -1,0 +1,466 @@
+Register Reference
+%rax    %eax    %ax     %al     Return value    Caller-save
+%rbx    %ebx    %bx     %bl                     Callee-save
+%rcx    %ecx    %cx     %cl     Arg 4           Caller-save
+%rdx    %edx    %dx     %dl     Arg 3           Caller-save
+%rsi    %esi    %si     %sil    Arg 2           Caller-save
+%rdi    %edi    %di     %dil    Arg 1           Caller-save
+%rsp    %esp    %sp     %spl    Stack pointer   Callee-save
+%rbp    %ebp    %bp     %bpl    Base pointer    Callee-save
+%r8     %r8d    %r8w    %r8b    Arg 5           Caller-save
+%r9     %r9d    %r9w    %r9b    Arg 6           Caller-save
+%r10    %r10d   %r10w   %r10b                   Caller-save
+%r11    %r11d   %r11w   %r11b                   Caller-save
+%r12    %r12d   %r12w   %r12b                   Callee-save
+%r13    %r13d   %r13w   %r13b                   Callee-save
+%r14    %r14d   %r14w   %r14b                   Callee-save
+%r15    %r15d   %r15w   %r15b                   Callee-save
+
+Function definition guesses:
+next_line -- goes to the next line in input file
+strcmp_pb -- compares values from %esi and %edi
+sscanf_pb -- moves first input to rsi, second input to rcx
+pb_rand -- moves a random number to rax
+
+
+PHASE01:
+Just had to print quote to figure out what to input
+
+
+PHASE02:
+Something with prime factors?
+Find RAND_UMVAL
+
+
+PHASE03:
+failure at cmp %ebx, 0x4(%rsp) (at 0x400000a939)
+rsp = 0x4001902f50
+0x4(rsp) = 0x4001902f44
+
+rbx needs to equal (rsp) + 4
+how does rbx change?
+input is stored in rsi. what role does it play here????
+- does not affect rax
+input -> rbx:
+1 -> 0xffffd5da
+2 -> same
+3 -> same
+5 -> same
+10 -> same
+100 -> same
+5000 -> same
+1234567890 -> same
+???
+input does not affect rbx?
+
+what about input -> 0x4(%rsp)?
+1 -> 1
+2 -> 2
+10 -> 10
+15 -> 15
+oh.
+
+PHASE04:
+4 inputs
+rsi holds last input
+steps:
+    - expand stack
+    - moves some weird data to rax
+    - moves that data to spot on stack 18 bytes from pointer
+    - clears rax
+    - gets the next line
+        - rsi stores input string w/ newline
+        - rdi and rax stores input string w/o newline
+    - move input string in rax to rdi
+    - move stack pointer to rdx (for safekeeping?)
+    - loads adddresses for rcx, r9, r8, and rsi
+    - sets rax to 0
+    - calls sscanf_pb
+        - expands stack
+        - rdx value stored at rsp + 0x30
+        - rcx stored at rsp + 0x38
+        - r8 in rsp + 0x40
+        - r9 in rsp + 0x48
+        - moves weird piece of data to rax
+            - saves that to rsp + 0x18
+        - clears eax
+        - moves 0x10 to memory address pointed by rsp
+        - moves 0x30 to rsp + 0x4
+        - loads 0xe0(%rsp) of rax
+        - moves rax data to rsp + 0x8
+        - loads 0x20(%rsp) of %rax
+        - moves rax to rsp + 0x10
+        - moves rsp to rdx
+        - calls __isoc99_vsscanfr
+            register updates:
+            - rax ends up with 4 (# of inputs?)
+            - rcx stores 48 (idk what this is from)
+            - rdx stores 0
+            - rsi stores last input in line
+            - rdi stores address storing last input
+            - r8 stores 0x1999999999999999 (what)
+            - r9 stores 0
+        - moves rsp + 0x18 to rdx
+        - sub %rx:0x28 from rdx which makes it 0
+        - adds 0xd8 to rsp
+    i stopped tracking here
+
+3 2 1 0 are the only inputs that get me further ahead so far
+permutations? sort them?
+0 1 2 3 x
+0 1 3 2 x
+0 2 1 3 x
+0 2 3 1 x
+0 3 1 2 x
+0 3 2 1 x
+1 0 2 3 x
+1 0 3 2 x
+1 2 0 3 x
+1 2 3 0 x
+1 3 0 2 x
+1 3 2 0 x
+2 0 1 3 x
+2 0 3 1 x
+2 1 0 3 x
+2 1 3 0 x
+2 3 0 1 x
+2 3 1 0 x
+3 0 1 2 x
+3 0 2 1 x
+3 1 0 2 << This is the one...
+3 1 2 0
+3 2 0 1
+3 2 1 0 x
+
+PHASE05:
+1 input?
+odd number?
+
+rdi stores input
+eax stores random number (0x33e2 at this time)
+and 0x1ff w/ eax (0x33e2 -> 0x1e2)
+and 0x64, %eax -> 0x246
+
+at phse05+127 (before jne)
+- and 0x4(%rsp), %edx
+- 0x4(%rsp) holds input value, %edx holds 1
+
+289
+437
+
+maybe pb_rand doesnt generate a random number every run?
+
+
+instructions before failure:
+- mov $0x1, %edx
+- shl %cl, %edx
+- and 0x4(%rsp), %edx
+- jne phase05+169
+    last comparison:
+    - test $0x1, %al
+
+
+it seems the address at rsp + 0x4 holds the input as a hex value (543 -> 0x00000543)
+
+
+edx per loop:
+1 (0001)
+4 (0100)
+16 (0001 0000)
+32 (0010 0000)
+64 (0100 0000)
+128 (1000 0000)
+256
+
+goal: input must have 0 at these bits
+1111 1110 0000 1010
+
+break *0x400000aafa
+
+
+PHASE06:
+stepi
+
+55555556 results in message
+"Failure: '      h'?? We're looking for a win, not whatever that is."
+
+How does blank in message get filled?
+55555557 changes h to c
+55555558 -> T
+Adding more numbers beyond the 8th doesn't change anything.
+55555559 -> G
+55555550 -> o
+
+possible keyword: Victory!
+EWq$jlI+
+
+Number -> char mapping:
+    0 o
+    1 Q
+    2 r
+    3 d
+    4 F
+    5 ' '
+    6 h
+    7 c
+    8 T
+    9 G
+    a .
+    b H
+    c s
+    d q
+    e !
+    f ;
+    g A
+    h z
+    i f
+-- Repeats from here
+j o
+k Q
+l r
+m d
+n F
+o ' '
+p h
+q c
+r T
+x G
+t Z
+u N
+v p
+w g
+x D
+y j
+z w
+A,E
+B,P
+C,R
+D,K,
+E,V
+F,a
+G,v
+H e
+I y
+J l
+K C
+L L
+M m
+N U
+O O
+P J
+Q Y
+R n
+S ?
+T x
+U ,
+V S
+W i
+X b
+Y B
+Z u
+! W
+@ w
+# M
+$ t
+% X
+^ t
+& I
+* q
+(
+)
+-
+=
++ !
+[
+]
+\
+Was there a better way to do this (like perhaps inspecting the code more)? Absolutely.
+
+
+PHASE07:
+7 inputs?
+rax stores first input
+- im guessing multiple calls to next_input will have rax store each letter sequentially?
+
+rdx stores my id
+
+after strtoq:
+rcx now holds a
+
+break *0x400000accb
+stepi
+
+moments before failure:
+    movl $0x1, 0x4(%rax)    # phase07+210 (0x400000ad61)
+    add $0x1, %ecx
+    mov 0x8(%rax), %rdx
+    test %rdx, %rdx
+    je phase07+196          # passed
+    mov (%rdx), %ebx
+    cmp %ebx, (%rax)
+    jg phase07+184          # passed
+    mov %rdx, %rax
+    jmp phase07+199
+    ...
+
+    test %rax, %rax         # phase07+199 (multiple jumps go to here)
+    je phase07+240
+
+
+    mov %rdx, $rax          # phase07+196
+    test %rax, %rax
+    je phase07+240
+
+    cmp $0x6, %ecx          # phase07+240
+    jne phase07+267
+
+walking through the code:
+    initial stuff (push rbx to stack, grow stack and stuff, clear eax, set ebx to 0)
+
+    jump to +72
+    cmp ebx to 5 (initially 0)
+    jle to 32 (jumps)
+
+    # phase07+32
+    move 0 to eax
+    grab next input (first one)
+    rax holds input, no clue what rcx or rdi is supposed to hold, rdx holds student id
+    rdi set to input value
+    edx set to 0xa
+    esi set to 0
+        [register values so far]
+        rax = input
+        rdi = input
+        edx = 0xa
+        esi = 0
+
+    calls strtoq
+    rax now holds 0
+    rcx holds first input
+    r8 holds 0x1999999999999999
+    r10 holds 0x40000cb420
+    r11 holds 0x40000cbd20
+
+    rdx holds 0 (from rax)
+    movslq %ebx, %rax (no clue what this does)
+    mov %edx (holds 0) to (%rsp, %rax, 4)
+    adds 1 to ebx
+    cmp ebx to 5 (seems to act as for loop)
+    jle back to +32
+        [register values so far]
+        rax = 0
+        rbx = 1
+        rcx = input
+        rdx = 0
+        rsi = 0
+        rdi = 0xa
+        rbp = 2
+
+so far what im gathering is that the first 6 inputs are grabbed and operated on (dk in what way, need to look into instructions), and the 7th input is operated on differently.
+
+are these inputs stored somewhere after each loop?
+
+    [loop 2-5]
+    rax = 1, 2, 3, 4, 5
+    rbx = 2, 3, 4, 5, 6
+    rcx = 2nd input, 3rd input, 4th input, 5th input, 6th
+
+    (after loop)
+    eax holds 0
+    call for next input
+    rax holds 7th input
+    rdi holds 7th input from rax
+    edx holds 0xa
+    esi holds 0
+
+    call to strtoq
+        [registers so far]
+        rax = 0
+        rbx = 6 (unchanged since loop)
+        rcx = 7th input
+        rdx = 0x10
+        rdi = 0xa
+    jump to phase07+115
+
+    # phase07+112
+    add 1 to ecx
+
+    # phase07+115
+    compare ecx to 5
+    jg to phase07+161
+    movslq %ecx, %rdx (again, dk what this does)
+        rdx now holds 0
+    moves (%rsp, %rdx, 4) to %edx (register seems unchanged)
+    tests edx
+    js to phase07+112 (jump if test results in negative)
+
+    movslq %edx, %rdx
+    shifts rdx (currently 0) left 4
+    lea 0xf18c1(%rip), %rdi
+        mentions intlist_nodes var stored at 0x400000fc5e0
+        rdi stores this var
+    adds rdi to rdx
+    movslq %ecx, %rsi
+    shifts rsi (currently 0) left 4
+    moves rdx to 0x8(%rdi, %rsi, 1)
+        rdi + 0x8 holds "\340\305\017" as string or -32 as decimal
+    jump to phase07+115 (at 0x400000acfd)
+
+    [registers each loop]
+    rbx = 6
+    rcx = 0
+    rdx = 0x10
+    rsi = 0
+    rdi = 0xa
+    rsp = 0x4001902f40
+    r8 = 0x1999999999999999
+    r10 = 0x40000cb420
+    r11 = 0x40000cbd20
+
+taking a break from tracking this.
+
+what is in intlist_nodes?
+
+loop:
+rdi = 0xf18c1(rip) = 1 # 0x400000ad1f
+add rdi, rdx
+
+waaaaait looks like each value of intlist_nodes is stored at line 0x400000ad29
+
+0x400000ad1f
+
+rbx = 6
+rcx = 0, 1, 2, 3, 4, 5
+rdx (followed with 0x40000) = fc5e0, fc680, fc7e0, fc8e0, fc9e0, fcae0
+rsi = 0, 16, 32, 48, 64, 80
+rdi = rdx
+rbp = 2
+
+x/24x 0x40000fc5e0
+
+points:
+
+cltq
+shl $0x4, %rax
+lea 0xr18a3(%rip), %rdx
+add %rdx, %rax
+mov $0x0, %ecx
+jmp +199
+
+0x400000ad53 (+196)
+mov %rdx, %rax
+test %rax, %rax (+199)
+je +240
+cmpl $0x0, 0x4(%rax)
+jne +240
+movl $0x1, 0x4(%rax)
+add $0x1, %ecx
+mov 0x8(%rax), %rdx
+test %rdx, %rdx
+je +196
+
+0x400000ad7f (+240)
+cmp $0x6, %ecx
+jne <failure>
+
+I've tried sorting the values in ascending order and inputting their indices in that order and a whole bunch of other stuff. I don't think I'm getting through this. I'll cut my losses and call it quits from here. GG.

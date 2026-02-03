@@ -1,0 +1,130 @@
+Text file where I keep track of my work and thought processes.
+
+Sorry if it's kind of jumbled, I just typed as I went and attempted to explain my thought processes afterwards.
+
+PHASE01:
+a < b
+b > c
+a < c
+1 50 30
+
+
+PHASE02:
+a = 1 => 23
+v = 301 with a = 1, b = 2
+so v must = 301
+
+
+PHASE03:
+targ = 67109378 = 100000000000000001000000010
+Input positions of 1 bits:
+1 9 26
+
+
+PHASE04:
+a 1 2 3
+len = 1
+len1 = 0
+len2 = 0
+
+idx = 0
+targ = 5
+
+targ = length of one sequence?
+a b c = index of beginning, middle, end
+
+s = repeating sequence of 5 chars
+
+PHASE05:
+50 23
+t = 23
+
+condition:
+s == t
+m == t
+steps must = t
+
+Inputting a random large number worked with m = 23...
+
+
+PHASE06:
+slen = 90
+ilen = 21
+munge1 = 12
+munge2 = 16
+
+munge = X out positions
+
+original text:
+There are 10 kinds of people in the world: those who understand binary and those who don't
+
+manipulated text:
+There are 10 kinds of people in the world: thoseXXXX understand YYYYry and those who don't
+
+ who
+bina
+
+text -> hex
+flip hex
+hex -> decimal
+
+
+PHASE07:
+hash = 1532255552
+abs value of a - (whatever flint.f is) should be less than 1e-8?
+
+PHASE08:
+t = 43
+n >> 1 = 2
+ngl just a lot of trial and error and inputting random numbers here.
+just knew m should = t and n should be a much bigger number than 1 and hoped for the best.
+
+
+PHASE09:
+seed = 6580987483422171839
+
+scrambled letters = XjeCpSbwMRrdAWcOuEDtvigqkZVUByfaHYIlPsFhKJzLnQoNxGmT
+
+buf = SpCej
+
+buf = letters from scrambled letters at indexes of inputs
+
+chong.i = 478426194263
+chong.s = Waldo\000\000
+
+Find Waldo:
+find index of letters that make up "Waldo"
+13 31 35 11 46
+
+
+PHASE10:
+a >> (7 * i) & 0x7F =
+
+a >> 0 & 0x7F
+a >> 7 & 0x7F
+a >> 14 & 0x7F
+a >> 21 & 0x7F
+a >> 28 & 0x7F
+
+0x7F = 01111111
+
+pham0556 -> binary
+01110000 01101000 01100001 01101101 00110000 00110101 00110101 00110110
+
+-> hex
+70 68 61 6D 30 35 35 36
+
+shift bits of 'a' by 7*i, mask each 7 bit chunk
+
+- encode each char as binary representation
+- flip order of letters?
+- find decimal equivalent of binary number sequence?
+
+7-bit representation:
+1110000 1101000 1100001 1101101 0110000 0110101 0110101 0110110
+
+flipped:
+0110110 0110101 0110101 0110000 1101101 1100001 1101000 1110000
+
+
+GG's

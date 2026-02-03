@@ -1,0 +1,253 @@
+Computer Laboratory 2
+CSCI 2041: Advanced Programming Principles
+Tuesday, February 4, 2025
+
+0. Introduction.
+
+In this lab assignment, you will write some OCaml functions that perform arithmetic with rational numbers. You will use these functions to compute a rational approximation to e, the base of natural logarithms. This will give you some practice writing OCaml programs that are made up of many functions. It will also show how to translate an algorithm from imperative to applicative form.
+
+1. Theory.
+
+The base of natural logarithms is a constant written as e, and is approximately 2.71828182846. It’s often called Euler’s number, named for the Swiss mathematician Leonhard Euler (1707–1783) who discovered it (his name is pronounced like oiler). The constant e may be defined as the following infinite sum, which may be familiar from a calculus or mathematical analysis course.
+
+ 
+
+1
+
+ 
+
+1
+
+ 
+
+1
+
+ 
+
+1
+
+ 
+
+ 
+
+e  =  
+
+  +   
+
+  +   
+
+  +   
+
+  +   
+
+⋯
+
+ 
+
+ 0! 
+
+ 
+
+ 1! 
+
+ 
+
+ 2! 
+
+ 
+
+ 3! 
+
+ 
+
+ 
+
+We can’t compute this sum exactly, but we can approximate it as accurately as we like by using the following imperative algorithm, shown in a C-like language.
+
+double euler() 
+{ 
+  double c = 1; 
+  double s = 0; 
+  double t = 1; 
+  while (t > ε) 
+  { 
+    s = s + t; 
+    t = t / c; 
+    c = c + 1; 
+  } 
+  return s; 
+}
+
+Here c is a counter that helps compute factorials, s is the sum, t is a term in the sum, and ε (epsilon) tells how accurate we want s to be. For example, if ε = 0.00001, then the algorithm computes s to an accuracy of about five digits after the decimal point. You do not have to know why the algorithm works to do this assignment!
+      We could use floating point numbers to represent c, s, and t, and floating point operations for ‘<’, ‘+’, and ‘/’. But instead of floating point numbers, we can also use fractions whose numerators and denominators are integers. Such fractions are called rational numbers, and their operations are said to perform rational arithmetic.
+
+Rational arithmetic. In rational arithmetic, each real number is represented (approximately) as a fraction n / d, where the numerator n is an integer, and the denominator d is an integer greater than 0. The integers n and d have no common factors, so the fraction is in ‘‘lowest terms.’’ We ensure this by always dividing n and d by their greatest common divisor (gcd n d) whenever we compute a rational number.
+
+ n 
+
+ 
+
+ n / (gcd n d) 
+
+  =  
+
+ d 
+
+ 
+
+ d / (gcd n d) 
+
+We also define functions (num r) and (den r), where r is a rational number. They return the numerator and denominator of r, respectively.
+
+ 
+
+ 
+
+ n 
+
+ 
+
+ 
+
+ 
+
+num  
+
+  =   n
+
+ 
+
+ 
+
+ 
+
+ d 
+
+ 
+
+ 
+
+     
+
+ 
+
+ 
+
+ n 
+
+ 
+
+ 
+
+ 
+
+den  
+
+  =   d
+
+ 
+
+ 
+
+ 
+
+ d 
+
+ 
+
+ 
+
+If a and b are rational numbers, then their sum a + b is defined like this. We make sure both numbers have the same denominator, add them, then reduce the result to lowest terms.
+
+ 
+
+ num a × den b + den a × num b 
+
+a + b  =  
+
+ 
+
+den a × den b
+
+The product a × b is defined like this. We multiply numerators and denominators, then reduce the result to lowest terms.
+
+ 
+
+ num a × num b 
+
+a × b  =  
+
+ 
+
+ den a × den b 
+
+The quotient a / b is defined like this, assuming b ≠ 0. We multiply a by the reciprocal of b, then reduce the result to lowest terms.
+
+ 
+
+ num a × den b 
+
+ a / b  =  
+
+ 
+
+ den a × num b 
+
+Finally, we test if a > b like this. We make sure both numbers have the same denominator, then compare their numerators.
+
+ a > b   =   (num a × den b) > (den a × num b)
+
+We could have defined more rational arithmetic operations, like ‘−’ and ‘<’, but we won’t need them here.
+
+2. Implementation.
+
+For this laboratory assignment, you must write OCaml functions that perform rational arithmetic as described in the previous section. Your functions must represent rational numbers as OCaml tuples with two elements. As a result, the rational number n / d is represented as the 2-tuple (n, d), which has the type int ∗ int.
+      OCaml predefines two functions fst and snd that take 2-tuples as arguments. The function fst returns the left member of a 2-tuple, so it has the type 'a ∗ 'b -> 'a. The function snd returns the right member of a 2-tuple, so it has the type 'a ∗ 'b -> 'b. These make it easy to define the functions num and den, like this:
+
+let num = fst ;; 
+let den = snd ;;
+
+You will also need a function (gcd i j) that returns the greatest common divisor of integers i and j. You can define gcd like this: it has the type int -> int -> int.
+
+let rec gcd i j = 
+  if i <> 0 
+  then if j > i 
+       then gcd i (j - i) 
+       else gcd (i - j) j 
+  else j ;;
+
+You must write the following functions yourself. They have short snappy names, because you might need to call them many times. All functions that take rational numbers as arguments must assume that those rational numbers are in lowest terms. All functions that return rational numbers must make sure that those rational numbers are also in lowest terms.
+
+rat n d
+
+Return the rational number whose numerator is the integer n and whose denominator is the integer d. The type of rat is int -> int -> int ∗ int. You may assume that n ≥ 0 and d > 0. Hints: use gcd. Do not compute the gcd of n and d more than once.
+
+ratAdd a b
+
+Return the rational number that is the sum of the rational numbers a and b. The type of ratAdd is int ∗ int -> int ∗ int -> int ∗ int. Hint: use rat.
+
+ratMul a b
+
+Return the rational number that is the product of rational numbers a and b. The type of ratMul is int ∗ int -> int ∗ int -> int ∗ int. Hint: use rat.
+
+ratDiv a b
+
+Return the rational number that is the quotient of the rational numbers a and b. The type of ratDiv is int ∗ int -> int ∗ int -> int ∗ int. You may assume that b ≠ 0. Hint: use rat.
+
+ratGt a b
+
+If the rational number a is greater than the rational number b, then return true, otherwise return false. The type of ratGt is int ∗ int -> int ∗ int -> bool. Hint: do not use an if–then–else.
+
+euler ()
+
+Let ε be the rational number 1 / 100000. Compute e and return it as the rational number 109601 / 40320, which is approximately 2.71828. This function must use rat, ratAdd, ratMul, ratDiv, and ratGt to perform all arithmetic. The type of euler is unit -> int ∗ int.
+
+Throughout these functions, you must not use floating point numbers or floating point arithmetic in any way. You must also not use OCaml loops or variables in any way (OCaml has loops and variables, but we have not yet discussed them in class). If you do any of these things, then you will receive ZERO POINTS for this laboratory assignment!
+
+3. Beware.
+
+The functions described here will work well in this laboratory assignment, but they may not work in other programs. This is because the numerators and denominators of rational numbers can grow too large to be represented as int’s. Rational numbers are more properly implemented using data structures that can represent integers of arbitrary size—often called bignums. However, implementing bignums would make this assignment too complicated to be completed in a week.
+
+4. Deliverables.
+
+Run the tests in the file tests2.ml. They are worth 40 points. Then submit the OCaml code for your functions, the tests, and the results of the tests, all in one file. Put the test results in a comment (∗ ... ∗) at the end of your file. Your lab TA’s will tell you how and where to turn in your work. It must be submitted by 11:55 PM on Tuesday, February 11, 2025.

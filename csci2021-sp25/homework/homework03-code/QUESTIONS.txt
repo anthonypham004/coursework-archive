@@ -1,0 +1,167 @@
+                           _________________
+
+                            HW 03 QUESTIONS
+                           _________________
+
+Write your answers to the questions below directly in this text file to
+prepare for the associated quiz. Credit for the HW is earned by
+completing the online quiz.
+
+
+PROBLEM 1: Two-Pass Input and malloc()
+======================================
+
+  One frequently encounters the following situation when reading files
+  - The file contains some data that is to be read into a dynamically
+    allocated array
+  - There is no indication of how much data is in the file
+
+  C programs commonly use a *two-pass* input strategy to handle this
+  situation
+  1. Read through the file once to count items in the file, then allocate
+     memory for an array of that size
+  2. Back up to the beginning of the file and read data from the file
+     into the array
+
+  The provided program 'twopass.c' demonstrates this technique along
+  with several other input / formatting techniques.
+
+
+A
+~
+  Compile and run the 'twopass.c' program on the two provided text files
+  'nums1.txt' and 'nums2.txt'.  Paste the output the program produces
+  below.
+
+./a.out nums1.txt
+Reading double values from file 'nums1.txt'
+[0] :     1.00 == 1.0000e+00
+[1] :     2.00 == 2.0000e+00
+[2] :     3.00 == 3.0000e+00
+[3] :     4.00 == 4.0000e+00
+[4] :     5.00 == 5.0000e+00
+[5] :     6.00 == 6.0000e+00
+[6] :     7.00 == 7.0000e+00
+[7] :     8.00 == 8.0000e+00
+[8] :     9.00 == 9.0000e+00
+[9] :    10.00 == 1.0000e+01
+
+./a.out nums2.txt
+Reading double values from file 'nums2.txt'
+[0] :     4.35 == 4.3523e+00
+[1] : 37066.25 == 3.7066e+04
+[2] :   307.07 == 3.0707e+02
+[3] :     0.05 == 5.1072e-02
+[4] :   613.85 == 6.1385e+02
+[5] :  9443.33 == 9.4433e+03
+[6] : 84099.99 == 8.4100e+04
+[7] : 28202.73 == 2.8203e+04
+
+B
+~
+  Examine the function 'read_all_doubles()' in 'twopass.c' and describe
+  which lines/blocks of code carry out the following actions. Use the
+  provided comments in the file as a guide.
+
+  - Opens the file for reading and checks for errors
+    FILE *fin = fopen(filename, "r");    // open the file
+      if (fin == NULL) {                   // check file opened successfully
+          return NULL;
+      }
+  Creates file object *fin. If error has occurred (resulting in fin having a null value), return the NULL value.
+
+  - Counts all the doubles in the file
+    double tmp;                                // temporary space to read one double
+    int count = 0;                             // count number of doubles in file
+    while (1) {                                // first input pass: infinite loop to count doubles
+        int ret = fscanf(fin, "%lf", &tmp);    // try to read a double
+        if (ret == EOF) {    // check if End Of File reached, break from loop if so
+            break;
+        }
+        count++;    // successfully read a double, increment count
+    }
+Starts with a temporary space for a double "tmp" and a counter "count". In the infinite while loop, fscanf attempts to read a double. When successful, increments count. Once end of file reached, break out of while loop.
+
+  - Allocates memory for doubles in the file
+    double *data = malloc(count * sizeof(double));    // allocate space for the array after counting
+Allocates enough space for "count" amount of doubles.
+
+  - Moves the file read position to the beginning of the file
+    rewind(fin);
+
+  - Closes the file when reading is complete
+    fclose(fin);
+
+C
+~
+  In your answer to the previous problem, you should have identified a
+  use of 'malloc()' in 'read_all_doubles()'.  Where is this memory
+  'free()'d and why?
+
+Right before the program ends in main (before return 0;). Memory is freed here because the data in that memory is still being accessed up to the end of the program.
+
+D
+~
+  Examine how the doubles read from file are printed in the 'main()'
+  function. Discuss below the format specifiers used by 'printf()' and
+  the width/precision modifiers that are used to get a "table-like"
+  appearance.  You may wish to consult the Manual page on 'printf()'
+  such as the one here:
+
+  <https://man7.org/linux/man-pages/man3/printf.3.html>
+
+  printf("[%d] : %8.2f == %10.4e\n", i, nums[i], nums[i]);
+
+Each line starts with its row number in square brackets. The following format tag %8.2f means the following argument is restricted to 8 characters in length with a 2 decimal point precision. The next format tag specifies a 10 character length number and 4 decimal points using E notation.
+
+Using the same length for each argument within the line format ensures a uniform length across all lines.
+
+
+PROBLEM 2: Binary Files
+=======================
+
+  Examine the 'read_items.c' program and the provided input binary file
+  'items.bin'.
+
+A
+~
+  Open the 'items.bin' file with a text editor (make sure not to modify any
+  of the file's contents). What do you see? Are there any parts of the file
+  that look understandable to you?
+
+A lot of things in red. There are some understandable words scattered across.
+
+B
+~
+  Compile the 'read_items.c' program and run it on the provided binary
+  file 'items.bin'. Paste the output below. How does this output relate
+  to what you saw when you opened the file with an editor?
+  ./a.out items.bin
+  82 of Item 'Hydra'
+  7 of Item 'Arrow'
+  2 of Item 'Swan'
+  1 of Item 'Flame'
+  3 of Item 'Pearl'
+  14 of Item 'Orchid'
+  9 of Item 'Staff'
+  4 of Item 'Looking Glass'
+  12 of Item 'Tempest'
+  1 of Item 'Lamp Post'
+
+The output is human-readable.
+
+C
+~
+  Examine the body of the 'while' loop in the 'main()' function. When working
+  with binary files, we use 'fread()' rather than 'fscanf()' to read in a
+  string value. However, we need information about the string's length so we
+  know how many bytes to read.
+
+  How did we learn of the length of the string representing each item's name in
+  the binary file? What two things does this length help us do?
+
+The length of the string is stored somewhere in the binary file. fread reads in an int size entry from the file. This will be the length of the string that gets stored in name_len.
+
+This value then gets used to determine how many chars to read in for the next fread statement for the name and is also used to determine where the end of the string array is to place the null terminator.
+
+
